@@ -1,6 +1,6 @@
 const list = document.querySelectorAll('.student-item');
 const itemsPerPage = 10; // Set how many items to show per page.
-const initialPage = 1; // Set which page loads first.
+const initialPageNum = 1; // Set which page number loads first.
 
 const pageHeader = document.querySelector('.page-header');
 const title = pageHeader.querySelector('h2');
@@ -10,30 +10,62 @@ const searchButton = document.createElement('button');
 searchBox.className = 'student-search';
 searchBox.appendChild(searchInput);
 searchBox.appendChild(searchButton);
+searchInput.placeholder = 'Search for students...';  
 searchInput.type = 'search';
-searchQuery = searchInput.value;
-searchInput.value = '';
-searchButton.type = 'submit';
 searchButton.textContent = 'Search';
 pageHeader.append(searchBox);
 
-searchBox.addEventListener('submit', (e) => {
-  e.target.preventDefault();
-});
-
-
-const showPage = (list, page) => {
+/**
+ * 
+ * @param {*} list 
+ * @param {*} query 
+ * @param {*} page 
+ */
+const showPage = (list, query, page) => {
   let startIndex = page * itemsPerPage - itemsPerPage;
   let endIndex = page * itemsPerPage;
-  for (let i = 0; i < list.length; i += 1) {
-    if (i >= startIndex && i < endIndex) {
-      list[i].style.display = '';
-    } else {
-      list[i].style.display = 'none';
+  if (query) {
+    for (let i = 0; i < list.length; i += 1) {
+      const name = list[i].querySelector('h3');
+      const comparison = name.textContent.indexOf(query) !== -1;
+      if (comparison) {
+        list[i].style.display = '';
+      } else {
+        list[i].style.display = 'none';
+      }
+    }
+  } else {
+    for (let i = 0; i < list.length; i += 1) {
+      if (i >= startIndex && i < endIndex) {
+        list[i].style.display = '';
+      } else {
+        list[i].style.display = 'none';
+      }
     }
   }
 };
-showPage(list, initialPage);
+showPage(list, null, initialPage); 
+
+/**
+ * The event listener on `input` allows the user to see search results as they 
+ * type instead of waiting for them to click the button. This automatically 
+ * gives us the advantage of the input[type="search"]'s clear event returning 
+ * all of the results back to normal.
+ */
+searchBox.addEventListener('input', (e) => {
+  showPage(list, searchInput.value);
+});
+
+/**
+ * In addition to the listener on `input`, we include one of `click` which 
+ * targets the "Search" button. If for any reason the input event fails to 
+ * trigger this is backup.
+ */
+searchBox.addEventListener('click', (e) => {
+  if (e.target.tagName === 'BUTTON'){
+    showPage(list, searchInput.value);
+  }
+});
 
 const appendPageLinks = (list) => {
   const page = document.querySelector('.page');
@@ -57,7 +89,7 @@ const appendPageLinks = (list) => {
         const paginationButton = e.target;
         for (let i = 0; i < paginationPageCount; i += 1) {
           paginationLink.className = '';
-          showPage(list, paginationButton.textContent);
+          showPage(list, null, paginationButton.textContent);
         }
         paginationButton.className = 'active';
       }
